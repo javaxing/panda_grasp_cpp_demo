@@ -5,10 +5,10 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 
-add_executable(panda_grasp_cpp_demo_node src/panda_grasp_cpp_demo_node.cpp)
-ament_target_dependencies(panda_grasp_cpp_demo_node rclcpp std_msgs)
+add_executable(panda_grasp_demo_node src/panda_grasp_demo_node.cpp)
+ament_target_dependencies(panda_grasp_demo_node rclcpp std_msgs)
 
-install(TARGETS panda_grasp_cpp_demo_node
+install(TARGETS panda_grasp_demo_node
         DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
