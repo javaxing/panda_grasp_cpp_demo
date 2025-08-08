@@ -4,25 +4,30 @@
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 
-class PandaGraspDemo : public rclcpp::Node
+// 继承 enable_shared_from_this 以安全使用 shared_from_this()
+class PandaGraspDemo : public rclcpp::Node, public std::enable_shared_from_this<PandaGraspDemo>
 {
 public:
   PandaGraspDemo()
       : Node("panda_grasp_demo")
   {
     RCLCPP_INFO(this->get_logger(), "Panda Grasp Demo Node Started");
+    // 不要在构造函数中调用 shared_from_this()！
+    // 延迟初始化
+  }
 
-    // 正确获取 NodeInterface，用于 MoveGroupInterface 初始化
+  void initialize()
+  {
+    // 构造之后，才能安全地调用 shared_from_this()
     move_group_arm_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(
-        this->shared_from_this(), "panda_arm");
+        shared_from_this(), "panda_arm");
 
     move_group_gripper_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(
-        this->shared_from_this(), "hand");
+        shared_from_this(), "hand");
 
-    // 设置规划参考坐标系
     move_group_arm_->setPoseReferenceFrame("world");
 
-    // 执行抓取流程
+    // 执行抓取任务
     openGripper();
     moveToPreGraspPose();
     closeGripper();
@@ -42,11 +47,9 @@ private:
     target_pose.position.z = 0.3;
 
     move_group_arm_->setPoseTarget(target_pose);
-
     moveit::planning_interface::MoveGroupInterface::Plan plan;
-    bool success = (move_group_arm_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
 
-    if (success)
+    if (move_group_arm_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS)
     {
       move_group_arm_->execute(plan);
       RCLCPP_INFO(this->get_logger(), "Moved to pre-grasp pose.");
@@ -63,11 +66,9 @@ private:
     current_pose.position.z += 0.1;
 
     move_group_arm_->setPoseTarget(current_pose);
-
     moveit::planning_interface::MoveGroupInterface::Plan plan;
-    bool success = (move_group_arm_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
 
-    if (success)
+    if (move_group_arm_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS)
     {
       move_group_arm_->execute(plan);
       RCLCPP_INFO(this->get_logger(), "Lifted the object.");
@@ -82,9 +83,8 @@ private:
   {
     move_group_gripper_->setNamedTarget("open");
     moveit::planning_interface::MoveGroupInterface::Plan plan;
-    bool success = (move_group_gripper_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
 
-    if (success)
+    if (move_group_gripper_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS)
     {
       move_group_gripper_->execute(plan);
       RCLCPP_INFO(this->get_logger(), "Opened gripper.");
@@ -99,9 +99,8 @@ private:
   {
     move_group_gripper_->setNamedTarget("close");
     moveit::planning_interface::MoveGroupInterface::Plan plan;
-    bool success = (move_group_gripper_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS);
 
-    if (success)
+    if (move_group_gripper_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS)
     {
       move_group_gripper_->execute(plan);
       RCLCPP_INFO(this->get_logger(), "Closed gripper.");
@@ -117,10 +116,13 @@ int main(int argc, char **argv)
 {
   rclcpp::init(argc, argv);
 
-  // 为使 shared_from_this 可用，需先使用 enable_shared_from_this 包装
+  // 使用 make_shared 创建智能指针实例
   auto node = std::make_shared<PandaGraspDemo>();
-  rclcpp::spin(node);
 
+  // 构造完成后再调用 shared_from_this() 安全执行初始化
+  node->initialize();
+
+  rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;
 }
