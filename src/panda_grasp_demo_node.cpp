@@ -1,39 +1,26 @@
-//
-// Created by xingxiaochi on 2025/8/7.
-//
-
 #include "panda_grasp_demo_node.h"
 #include <memory>
 #include <rclcpp/rclcpp.hpp>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
-#include <moveit_visual_tools/moveit_visual_tools.h>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 
-class PandaGraspDemo : public rclcpp::Node
+class PandaGraspDemo : public rclcpp::Node, public std::enable_shared_from_this<PandaGraspDemo>
 {
 public:
   PandaGraspDemo() : Node("panda_grasp_demo")
   {
     RCLCPP_INFO(this->get_logger(), "Panda Grasp Demo Node Started");
 
-    // 1. 初始化 MoveGroupInterface（机械臂与夹爪）
+    // 初始化 MoveGroupInterface
     move_group_arm_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(shared_from_this(), "panda_arm");
     move_group_gripper_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(shared_from_this(), "hand");
 
-    // 2. 设定规划目标参考系
     move_group_arm_->setPoseReferenceFrame("world");
 
-    // 3. 打开夹爪
     openGripper();
-
-    // 4. 移动到预抓取姿态
     moveToPreGraspPose();
-
-    // 5. 模拟抓取
     closeGripper();
-
-    // 6. 提起物体
     liftObject();
   }
 
@@ -50,15 +37,12 @@ private:
     target_pose.position.z = 0.3;
 
     move_group_arm_->setPoseTarget(target_pose);
+    moveit::planning_interface::MoveGroupInterface::Plan plan;
 
-    auto plan = move_group_arm_->plan();
-    if (plan)
-    {
-      move_group_arm_->execute(*plan);
+    if (move_group_arm_->plan(plan)) {
+      move_group_arm_->execute(plan);
       RCLCPP_INFO(this->get_logger(), "Moved to pre-grasp pose.");
-    }
-    else
-    {
+    } else {
       RCLCPP_ERROR(this->get_logger(), "Failed to plan to pre-grasp pose.");
     }
   }
@@ -66,18 +50,15 @@ private:
   void liftObject()
   {
     auto current_pose = move_group_arm_->getCurrentPose().pose;
-    current_pose.position.z += 0.1;  // 向上移动 10cm
+    current_pose.position.z += 0.1;
 
     move_group_arm_->setPoseTarget(current_pose);
+    moveit::planning_interface::MoveGroupInterface::Plan plan;
 
-    auto plan = move_group_arm_->plan();
-    if (plan)
-    {
-      move_group_arm_->execute(*plan);
+    if (move_group_arm_->plan(plan)) {
+      move_group_arm_->execute(plan);
       RCLCPP_INFO(this->get_logger(), "Lifted the object.");
-    }
-    else
-    {
+    } else {
       RCLCPP_ERROR(this->get_logger(), "Failed to lift object.");
     }
   }
@@ -85,23 +66,26 @@ private:
   void openGripper()
   {
     move_group_gripper_->setNamedTarget("open");
-    moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-    bool success = move_group_gripper_->plan(my_plan);
+    moveit::planning_interface::MoveGroupInterface::Plan plan;
 
-    if (success) {
-      move_group_gripper_->execute(my_plan);
+    if (move_group_gripper_->plan(plan)) {
+      move_group_gripper_->execute(plan);
       RCLCPP_INFO(this->get_logger(), "Opened gripper.");
+    } else {
+      RCLCPP_ERROR(this->get_logger(), "Failed to open gripper.");
     }
   }
 
   void closeGripper()
   {
     move_group_gripper_->setNamedTarget("close");
-    auto plan = move_group_gripper_->plan();
-    if (plan)
-    {
-      move_group_gripper_->execute(*plan);
+    moveit::planning_interface::MoveGroupInterface::Plan plan;
+
+    if (move_group_gripper_->plan(plan)) {
+      move_group_gripper_->execute(plan);
       RCLCPP_INFO(this->get_logger(), "Closed gripper.");
+    } else {
+      RCLCPP_ERROR(this->get_logger(), "Failed to close gripper.");
     }
   }
 };
