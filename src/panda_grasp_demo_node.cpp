@@ -18,12 +18,14 @@ public:
 
   void initialize()
   {
-    // 构造之后，才能安全地调用 shared_from_this()
+    // 解决 shared_from_this 冲突：使用 enable_shared_from_this 的作用域
+    auto node_ptr = std::enable_shared_from_this<PandaGraspDemo>::shared_from_this();
+
     move_group_arm_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(
-        shared_from_this(), "panda_arm");
+        node_ptr, "panda_arm");
 
     move_group_gripper_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(
-        shared_from_this(), "hand");
+        node_ptr, "hand");
 
     move_group_arm_->setPoseReferenceFrame("world");
 
