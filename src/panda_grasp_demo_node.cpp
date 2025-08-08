@@ -85,10 +85,11 @@ private:
   void openGripper()
   {
     move_group_gripper_->setNamedTarget("open");
-    auto plan = move_group_gripper_->plan();
-    if (plan)
-    {
-      move_group_gripper_->execute(*plan);
+    moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+    bool success = move_group_gripper_->plan(my_plan);
+
+    if (success) {
+      move_group_gripper_->execute(my_plan);
       RCLCPP_INFO(this->get_logger(), "Opened gripper.");
     }
   }
