@@ -5,8 +5,7 @@
 using moveit::planning_interface::MoveGroupInterface;
 using moveit_visual_tools::MoveItVisualTools;
 
-class PandaGraspDemo : public rclcpp::Node,
-                       public std::enable_shared_from_this<PandaGraspDemo>
+class PandaGraspDemo : public rclcpp::Node, public std::enable_shared_from_this<PandaGraspDemo>
 {
 public:
     PandaGraspDemo() : Node("panda_grasp_demo")
@@ -16,12 +15,14 @@ public:
 
     void initialize()
     {
+        auto self = shared_from_this(); // ✅ 现在安全，因为对象已经在 main 里用 shared_ptr 创建了
+
         // 初始化 MoveGroup 接口
-        move_group_arm_ = std::make_shared<MoveGroupInterface>(rclcpp::Node::shared_from_this(), "panda_arm");
-        move_group_gripper_ = std::make_shared<MoveGroupInterface>(rclcpp::Node::shared_from_this(), "hand");
+        move_group_arm_ = std::make_shared<MoveGroupInterface>(self, "panda_arm");
+        move_group_gripper_ = std::make_shared<MoveGroupInterface>(self, "hand");
 
         // 初始化 RViz 可视化
-        visual_tools_ = std::make_shared<MoveItVisualTools>(rclcpp::Node::shared_from_this(), "panda_link0", "moveit_visual_markers");
+        visual_tools_ = std::make_shared<MoveItVisualTools>("panda_link0", "moveit_visual_markers", self);
         visual_tools_->deleteAllMarkers();
         visual_tools_->loadRemoteControl();
 
@@ -85,7 +86,7 @@ int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
     auto node = std::make_shared<PandaGraspDemo>();
-    node->initialize();
+    node->initialize(); // ✅ 这里调用，确保 enable_shared_from_this 可用
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;
