@@ -17,11 +17,11 @@ public:
     void initialize()
     {
         // 初始化 MoveGroup 接口
-        move_group_arm_ = std::make_shared<MoveGroupInterface>(shared_from_this(), "panda_arm");
-        move_group_gripper_ = std::make_shared<MoveGroupInterface>(shared_from_this(), "hand");
+        move_group_arm_ = std::make_shared<MoveGroupInterface>(rclcpp::Node::shared_from_this(), "panda_arm");
+        move_group_gripper_ = std::make_shared<MoveGroupInterface>(rclcpp::Node::shared_from_this(), "hand");
 
         // 初始化 RViz 可视化
-        visual_tools_ = std::make_shared<MoveItVisualTools>(shared_from_this(), "panda_link0", "moveit_visual_markers");
+        visual_tools_ = std::make_shared<MoveItVisualTools>(rclcpp::Node::shared_from_this(), "panda_link0", "moveit_visual_markers");
         visual_tools_->deleteAllMarkers();
         visual_tools_->loadRemoteControl();
 
@@ -48,7 +48,7 @@ private:
 
         move_group_arm_->setPoseTarget(target_pose);
         MoveGroupInterface::Plan arm_plan;
-        bool success = (move_group_arm_->plan(arm_plan) == MoveIt::PlanningResult::SUCCESS);
+        bool success = (move_group_arm_->plan(arm_plan) == moveit::core::MoveItErrorCode::SUCCESS);
 
         if (success)
         {
@@ -64,7 +64,7 @@ private:
         // 2. 闭合夹爪
         move_group_gripper_->setNamedTarget("close");
         MoveGroupInterface::Plan gripper_plan;
-        if (move_group_gripper_->plan(gripper_plan) == MoveIt::PlanningResult::SUCCESS)
+        if (move_group_gripper_->plan(gripper_plan) == moveit::core::MoveItErrorCode::SUCCESS)
         {
             move_group_gripper_->execute(gripper_plan);
             RCLCPP_INFO(this->get_logger(), "Gripper closed");
@@ -73,7 +73,7 @@ private:
         // 3. 抬起物体
         target_pose.position.z += 0.1;
         move_group_arm_->setPoseTarget(target_pose);
-        if (move_group_arm_->plan(arm_plan) == MoveIt::PlanningResult::SUCCESS)
+        if (move_group_arm_->plan(arm_plan) == moveit::core::MoveItErrorCode::SUCCESS)
         {
             move_group_arm_->execute(arm_plan);
             RCLCPP_INFO(this->get_logger(), "Object lifted");
