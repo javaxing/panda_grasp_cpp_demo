@@ -14,14 +14,13 @@ public:
         RCLCPP_INFO(this->get_logger(), "Panda Grasp Demo Node Started");
     }
 
-    // 初始化函数（构造函数外部调用）
     void initialize()
     {
-        // 初始化 MoveGroup 接口（必须用 shared_from_this，否则参数无法绑定）
+        // 初始化 MoveGroup 接口
         move_group_arm_ = std::make_shared<MoveGroupInterface>(shared_from_this(), "panda_arm");
         move_group_gripper_ = std::make_shared<MoveGroupInterface>(shared_from_this(), "hand");
 
-        // 初始化可视化工具
+        // 初始化 RViz 可视化
         visual_tools_ = std::make_shared<MoveItVisualTools>(shared_from_this(), "panda_link0", "moveit_visual_markers");
         visual_tools_->deleteAllMarkers();
         visual_tools_->loadRemoteControl();
@@ -40,7 +39,7 @@ private:
     {
         namespace rvt = rviz_visual_tools;
 
-        // 1. 规划机械臂到预抓取姿态
+        // 1. 移动到预抓取位置
         geometry_msgs::msg::Pose target_pose;
         target_pose.orientation.w = 1.0;
         target_pose.position.x = 0.4;
@@ -48,7 +47,6 @@ private:
         target_pose.position.z = 0.4;
 
         move_group_arm_->setPoseTarget(target_pose);
-
         MoveGroupInterface::Plan arm_plan;
         bool success = (move_group_arm_->plan(arm_plan) == MoveIt::PlanningResult::SUCCESS);
 
@@ -63,7 +61,7 @@ private:
             return;
         }
 
-        // 2. 闭合夹爪（抓取）
+        // 2. 闭合夹爪
         move_group_gripper_->setNamedTarget("close");
         MoveGroupInterface::Plan gripper_plan;
         if (move_group_gripper_->plan(gripper_plan) == MoveIt::PlanningResult::SUCCESS)
@@ -86,11 +84,8 @@ private:
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
-
-    // 必须用 make_shared 创建，确保 enable_shared_from_this 可用
     auto node = std::make_shared<PandaGraspDemo>();
     node->initialize();
-
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;
