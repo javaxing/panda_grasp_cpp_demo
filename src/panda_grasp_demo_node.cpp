@@ -15,7 +15,7 @@ public:
 
     void initialize()
     {
-        auto self = shared_from_this(); // ✅ 现在安全，因为对象已经在 main 里用 shared_ptr 创建了
+        auto self = shared_from_this();
 
         // 初始化 MoveGroup 接口
         move_group_arm_ = std::make_shared<MoveGroupInterface>(self, "panda_arm");
