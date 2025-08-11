@@ -1,130 +1,97 @@
-#include <memory>
 #include <rclcpp/rclcpp.hpp>
 #include <moveit/move_group_interface/move_group_interface.h>
-#include <moveit/planning_scene_interface/planning_scene_interface.h>
-#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <moveit_visual_tools/moveit_visual_tools.h>
 
-// 继承 enable_shared_from_this 以安全使用 shared_from_this()
-class PandaGraspDemo : public rclcpp::Node, public std::enable_shared_from_this<PandaGraspDemo>
+using moveit::planning_interface::MoveGroupInterface;
+using moveit_visual_tools::MoveItVisualTools;
+
+class PandaGraspDemo : public rclcpp::Node,
+                       public std::enable_shared_from_this<PandaGraspDemo>
 {
 public:
-  PandaGraspDemo()
-      : Node("panda_grasp_demo")
-  {
-    RCLCPP_INFO(this->get_logger(), "Panda Grasp Demo Node Started");
-    // 不要在构造函数中调用 shared_from_this()！
-    // 延迟初始化
-  }
+    PandaGraspDemo() : Node("panda_grasp_demo")
+    {
+        RCLCPP_INFO(this->get_logger(), "Panda Grasp Demo Node Started");
+    }
 
-  void initialize()
-  {
-    // 解决 shared_from_this 冲突：使用 enable_shared_from_this 的作用域
-    auto node_ptr = std::enable_shared_from_this<PandaGraspDemo>::shared_from_this();
+    // 初始化函数（构造函数外部调用）
+    void initialize()
+    {
+        // 初始化 MoveGroup 接口（必须用 shared_from_this，否则参数无法绑定）
+        move_group_arm_ = std::make_shared<MoveGroupInterface>(shared_from_this(), "panda_arm");
+        move_group_gripper_ = std::make_shared<MoveGroupInterface>(shared_from_this(), "hand");
 
-    move_group_arm_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(
-        node_ptr, "panda_arm");
+        // 初始化可视化工具
+        visual_tools_ = std::make_shared<MoveItVisualTools>(shared_from_this(), "panda_link0", "moveit_visual_markers");
+        visual_tools_->deleteAllMarkers();
+        visual_tools_->loadRemoteControl();
 
-    move_group_gripper_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(
-        node_ptr, "hand");
+        RCLCPP_INFO(this->get_logger(), "MoveGroup and VisualTools initialized");
 
-    move_group_arm_->setPoseReferenceFrame("world");
-
-    // 执行抓取任务
-    openGripper();
-    moveToPreGraspPose();
-    closeGripper();
-    liftObject();
-  }
+        execute_grasp();
+    }
 
 private:
-  std::shared_ptr<moveit::planning_interface::MoveGroupInterface> move_group_arm_;
-  std::shared_ptr<moveit::planning_interface::MoveGroupInterface> move_group_gripper_;
+    std::shared_ptr<MoveGroupInterface> move_group_arm_;
+    std::shared_ptr<MoveGroupInterface> move_group_gripper_;
+    std::shared_ptr<MoveItVisualTools> visual_tools_;
 
-  void moveToPreGraspPose()
-  {
-    geometry_msgs::msg::Pose target_pose;
-    target_pose.orientation.w = 1.0;
-    target_pose.position.x = 0.4;
-    target_pose.position.y = 0.0;
-    target_pose.position.z = 0.3;
-
-    move_group_arm_->setPoseTarget(target_pose);
-    moveit::planning_interface::MoveGroupInterface::Plan plan;
-
-    if (move_group_arm_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS)
+    void execute_grasp()
     {
-      move_group_arm_->execute(plan);
-      RCLCPP_INFO(this->get_logger(), "Moved to pre-grasp pose.");
-    }
-    else
-    {
-      RCLCPP_ERROR(this->get_logger(), "Failed to plan to pre-grasp pose.");
-    }
-  }
+        namespace rvt = rviz_visual_tools;
 
-  void liftObject()
-  {
-    auto current_pose = move_group_arm_->getCurrentPose().pose;
-    current_pose.position.z += 0.1;
+        // 1. 规划机械臂到预抓取姿态
+        geometry_msgs::msg::Pose target_pose;
+        target_pose.orientation.w = 1.0;
+        target_pose.position.x = 0.4;
+        target_pose.position.y = 0.0;
+        target_pose.position.z = 0.4;
 
-    move_group_arm_->setPoseTarget(current_pose);
-    moveit::planning_interface::MoveGroupInterface::Plan plan;
+        move_group_arm_->setPoseTarget(target_pose);
 
-    if (move_group_arm_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS)
-    {
-      move_group_arm_->execute(plan);
-      RCLCPP_INFO(this->get_logger(), "Lifted the object.");
-    }
-    else
-    {
-      RCLCPP_ERROR(this->get_logger(), "Failed to lift object.");
-    }
-  }
+        MoveGroupInterface::Plan arm_plan;
+        bool success = (move_group_arm_->plan(arm_plan) == MoveIt::PlanningResult::SUCCESS);
 
-  void openGripper()
-  {
-    move_group_gripper_->setNamedTarget("open");
-    moveit::planning_interface::MoveGroupInterface::Plan plan;
+        if (success)
+        {
+            RCLCPP_INFO(this->get_logger(), "Arm plan found, executing...");
+            move_group_arm_->execute(arm_plan);
+        }
+        else
+        {
+            RCLCPP_WARN(this->get_logger(), "Arm planning failed");
+            return;
+        }
 
-    if (move_group_gripper_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS)
-    {
-      move_group_gripper_->execute(plan);
-      RCLCPP_INFO(this->get_logger(), "Opened gripper.");
-    }
-    else
-    {
-      RCLCPP_ERROR(this->get_logger(), "Failed to open gripper.");
-    }
-  }
+        // 2. 闭合夹爪（抓取）
+        move_group_gripper_->setNamedTarget("close");
+        MoveGroupInterface::Plan gripper_plan;
+        if (move_group_gripper_->plan(gripper_plan) == MoveIt::PlanningResult::SUCCESS)
+        {
+            move_group_gripper_->execute(gripper_plan);
+            RCLCPP_INFO(this->get_logger(), "Gripper closed");
+        }
 
-  void closeGripper()
-  {
-    move_group_gripper_->setNamedTarget("close");
-    moveit::planning_interface::MoveGroupInterface::Plan plan;
-
-    if (move_group_gripper_->plan(plan) == moveit::core::MoveItErrorCode::SUCCESS)
-    {
-      move_group_gripper_->execute(plan);
-      RCLCPP_INFO(this->get_logger(), "Closed gripper.");
+        // 3. 抬起物体
+        target_pose.position.z += 0.1;
+        move_group_arm_->setPoseTarget(target_pose);
+        if (move_group_arm_->plan(arm_plan) == MoveIt::PlanningResult::SUCCESS)
+        {
+            move_group_arm_->execute(arm_plan);
+            RCLCPP_INFO(this->get_logger(), "Object lifted");
+        }
     }
-    else
-    {
-      RCLCPP_ERROR(this->get_logger(), "Failed to close gripper.");
-    }
-  }
 };
 
 int main(int argc, char **argv)
 {
-  rclcpp::init(argc, argv);
+    rclcpp::init(argc, argv);
 
-  // 使用 make_shared 创建智能指针实例
-  auto node = std::make_shared<PandaGraspDemo>();
+    // 必须用 make_shared 创建，确保 enable_shared_from_this 可用
+    auto node = std::make_shared<PandaGraspDemo>();
+    node->initialize();
 
-  // 构造完成后再调用 shared_from_this() 安全执行初始化
-  node->initialize();
-
-  rclcpp::spin(node);
-  rclcpp::shutdown();
-  return 0;
+    rclcpp::spin(node);
+    rclcpp::shutdown();
+    return 0;
 }
