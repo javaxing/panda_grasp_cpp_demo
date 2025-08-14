@@ -30,7 +30,7 @@ public:
         // ======================
         // 2️⃣ 话题（Topic）：发布机器人状态
         // ======================
-        status_pub_ = this->create_publisher<RobotStatus>("robot_status", 10);
+        status_pub_ = this->create_publisher<RobotStatus>("RobotStatus", 10);
 
         // 定时发布状态（模拟传感器数据）
         timer_ = this->create_wall_timer(
