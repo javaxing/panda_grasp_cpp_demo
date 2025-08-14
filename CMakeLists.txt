@@ -13,7 +13,6 @@ find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 
 # 声明自定义接口
-find_package(rosidl_default_generators REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
         "msg/RobotStatus.msg"
@@ -29,12 +28,6 @@ ament_target_dependencies(panda_grasp_demo_node
         moveit_ros_planning_interface
 )
 
-ament_target_dependencies(panda_grasp_demo_node
-        rclcpp
-        moveit_ros_planning_interface
-        moveit_visual_tools
-        geometry_msgs
-)
 
 install(TARGETS panda_grasp_demo_node
         DESTINATION lib/${PROJECT_NAME}
