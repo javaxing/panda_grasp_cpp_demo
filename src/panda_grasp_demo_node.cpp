@@ -1,9 +1,9 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "geometry_msgs/msg/pose.hpp"
-#include "panda_grasp_cpp_demo/msg/robot_status.hpp"          // 话题消息
-#include "panda_grasp_cpp_demo/srv/move_to_target.hpp"       // 服务
-#include "panda_grasp_cpp_demo/action/navigate.hpp"          // 动作
+#include "panda_grasp_cpp_demo/msg/RobotStatus.hpp"          // 话题消息
+#include "panda_grasp_cpp_demo/srv/MoveToTarget.hpp"       // 服务
+#include "panda_grasp_cpp_demo/action/Navigate.hpp"          // 动作
 
 #include <memory>
 #include <thread>

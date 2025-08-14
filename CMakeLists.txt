@@ -15,9 +15,9 @@ find_package(geometry_msgs REQUIRED)
 # 声明自定义接口
 find_package(moveit_ros_planning_interface REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
-        "msg/robot_status.msg"
-        "srv/move_to_target.srv"
-        "action/navigate.action"
+        "msg/RobotStatus.msg"
+        "srv/MoveToTarget.srv"
+        "action/Navigate.action"
 )
 
 add_executable(panda_grasp_demo_node src/panda_grasp_demo_node.cpp)
