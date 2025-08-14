@@ -14,6 +14,8 @@ find_package(geometry_msgs REQUIRED)
 
 # 声明自定义接口
 find_package(moveit_ros_planning_interface REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(rosidl_default_runtime REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
         "msg/RobotStatus.msg"
         "srv/MoveToTarget.srv"
