@@ -1,9 +1,9 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "geometry_msgs/msg/pose.hpp"
-#include "robot_demo/msg/robot_status.hpp"          // 话题消息
-#include "robot_demo/srv/move_to_target.hpp"       // 服务
-#include "robot_demo/action/navigate.hpp"          // 动作
+#include "panda_grasp_cpp_demo/msg/robot_status.hpp"          // 话题消息
+#include "panda_grasp_cpp_demo/srv/move_to_target.hpp"       // 服务
+#include "panda_grasp_cpp_demo/action/navigate.hpp"          // 动作
 
 #include <memory>
 #include <thread>
@@ -14,7 +14,7 @@ using namespace std::chrono_literals;
 // 定义节点类
 class RobotDemoNode : public rclcpp::Node {
 public:
-    RobotDemoNode() : Node("robot_demo_node") {
+    RobotDemoNode() : Node("panda_grasp_cpp_demo_node") {
         // ======================
         // 1️⃣ 参数（Parameter）
         // ======================
