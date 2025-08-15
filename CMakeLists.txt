@@ -20,7 +20,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
         "msg/RobotStatus.msg"   # 确保路径完全正确
         "srv/MoveToTarget.srv"
         "action/Navigate.action"
-        DEPENDENCIES std_msgs geometry_msgs  # 添加依赖的其他消息包
 )
 
 # Create executable
