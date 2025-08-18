@@ -15,6 +15,8 @@ find_package(rclcpp_action REQUIRED)
 # 在 find_package 部分确保有以下内容
 find_package(rosidl_default_generators REQUIRED)
 find_package(rosidl_default_runtime REQUIRED)
+find_package(rosidl_typesupport_cpp REQUIRED)
+
 
 # 修改接口生成部分为
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -22,7 +24,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
         "msg/RobotStatus.msg"
         "srv/MoveToTarget.srv"
         "action/Navigate.action"
-        DEPENDENCIES std_msgs
+        DEPENDENCIES std_msgs geometry_msgs
 )
 
 # Create executable
@@ -31,6 +33,11 @@ add_executable(panda_grasp_demo_node src/panda_grasp_demo_node.cpp)
 # 关键链接配置
 target_include_directories(panda_grasp_demo_node PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp>
+)
+
+# 在 target_link_libraries 中添加
+target_link_libraries(panda_grasp_demo_node
+        ${PROJECT_NAME}__rosidl_typesupport_cpp
 )
 ament_target_dependencies(panda_grasp_demo_node
         rclcpp
