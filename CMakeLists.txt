@@ -37,6 +37,7 @@ target_include_directories(panda_grasp_demo_node PUBLIC
 
 # 在 target_link_libraries 中添加
 target_link_libraries(panda_grasp_demo_node
+        ${PROJECT_NAME}__rosidl_generator_cpp
         ${PROJECT_NAME}__rosidl_typesupport_cpp
 )
 ament_target_dependencies(panda_grasp_demo_node
@@ -47,8 +48,10 @@ ament_target_dependencies(panda_grasp_demo_node
 )
 
 # Install
-install(TARGETS panda_grasp_demo_node
-        DESTINATION lib/${PROJECT_NAME}
+install(DIRECTORY
+        ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp/
+        ${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_cpp/
+        DESTINATION include/${PROJECT_NAME}
 )
 
 ament_package()
