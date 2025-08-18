@@ -27,6 +27,11 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 # Create executable
 add_executable(panda_grasp_demo_node src/panda_grasp_demo_node.cpp)
+
+# 关键链接配置
+target_include_directories(panda_grasp_demo_node PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp>
+)
 ament_target_dependencies(panda_grasp_demo_node
         rclcpp
         std_msgs
