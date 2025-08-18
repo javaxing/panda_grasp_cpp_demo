@@ -12,14 +12,17 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rclcpp_action REQUIRED)
-# 必须包含的依赖
+# 在 find_package 部分确保有以下内容
 find_package(rosidl_default_generators REQUIRED)
+find_package(rosidl_default_runtime REQUIRED)
 
-# 接口生成部分
+# 修改接口生成部分为
 rosidl_generate_interfaces(${PROJECT_NAME}
-        "msg/RobotStatus.msg"   # 确保路径完全正确
+        ${rosidl_generate_interfaces_IDL_FILES}
+        "msg/RobotStatus.msg"
         "srv/MoveToTarget.srv"
         "action/Navigate.action"
+        DEPENDENCIES std_msgs
 )
 
 # Create executable
