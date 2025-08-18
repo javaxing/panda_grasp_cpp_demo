@@ -1,8 +1,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "panda_grasp_cpp_demo/msg/RobotStatus.hpp"
-#include "panda_grasp_cpp_demo/srv/MoveToTarget.hpp"
-#include "panda_grasp_cpp_demo/action/Navigate.hpp"
+#include "panda_grasp_cpp_demo/msg/robot_status.hpp"
+#include "panda_grasp_cpp_demo/srv/move_to_target.hpp"
+#include "panda_grasp_cpp_demo/action/navigate.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 
 using namespace std::chrono_literals;
