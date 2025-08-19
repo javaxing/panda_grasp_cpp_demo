@@ -2,9 +2,8 @@ cmake_minimum_required(VERSION 3.8)
 project(panda_grasp_cpp_demo)
 
 # Default to C++17
-if(NOT CMAKE_CXX_STANDARD)
-    set(CMAKE_CXX_STANDARD 17)
-endif()
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find dependencies
 find_package(ament_cmake REQUIRED)
@@ -32,10 +31,10 @@ add_executable(panda_grasp_demo_node src/panda_grasp_demo_node.cpp)
 
 # 关键链接配置
 target_include_directories(panda_grasp_demo_node PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp>
+        ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp
+        ${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_cpp/include
 )
 
-# 在 target_link_libraries 中添加
 target_link_libraries(panda_grasp_demo_node
         ${PROJECT_NAME}__rosidl_generator_cpp
         ${PROJECT_NAME}__rosidl_typesupport_cpp
@@ -45,6 +44,8 @@ ament_target_dependencies(panda_grasp_demo_node
         std_msgs
         geometry_msgs
         rclcpp_action
+        rosidl_default_runtime
+        rosidl_typesupport_cpp
 )
 
 # Install
