@@ -49,16 +49,9 @@ ament_target_dependencies(panda_grasp_demo_node
 )
 
 # 安装配置
-install(TARGETS panda_grasp_demo_node
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        RUNTIME DESTINATION lib/${PROJECT_NAME}
-)
-
-install(DIRECTORY
-        ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp/
-        ${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_cpp/
-        DESTINATION include
+install(TARGETS
+        panda_grasp_demo_node
+        DESTINATION lib/${PROJECT_NAME}
 )
 
 ament_package()
