@@ -31,8 +31,8 @@ add_executable(panda_grasp_demo_node src/panda_grasp_demo_node.cpp)
 
 # 关键链接配置
 target_include_directories(panda_grasp_demo_node PUBLIC
-        ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp
-        ${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_cpp/include
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_cpp/include>
 )
 
 target_link_libraries(panda_grasp_demo_node
@@ -48,11 +48,15 @@ ament_target_dependencies(panda_grasp_demo_node
         rosidl_typesupport_cpp
 )
 
-# Install
+# 安装配置
+install(TARGETS panda_grasp_demo_node
+        DESTINATION lib/${PROJECT_NAME}
+)
+
 install(DIRECTORY
         ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp/
         ${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_cpp/
-        DESTINATION include/${PROJECT_NAME}
+        DESTINATION include
 )
 
 ament_package()
